@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "commit": "bash ./npm-run-commit.sh",
+    "pull-force": "bash ./npm-run-pull-force.sh",
+    "dev": "concurrently \"npm --prefix client run dev\" \"npm --prefix server run dev\""
   },
   "keywords": [],
   "author": "",
