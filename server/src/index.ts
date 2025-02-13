@@ -23,6 +23,7 @@ import HashPassword from "./middleware/HashPassword";
 import VerifyPassword from "./middleware/VerifyPassword";
 import InsertUser from "./middleware/InsertUser";
 import Create_JWT_Middleware from "./middleware/Create_JWT_Middleware";
+import Verify_JWT_Middleware from "./middleware/Verify_JWT_Middleware";
 
 const app = express();
 const port = 8080;
@@ -72,7 +73,7 @@ app.post("/", (req: Request, res: Response) => {
 app.post("/register",
     // Ajout des middlewares
     RouteLimiterRequestIP,
-    VerifyKeys(["firstname", "lastname", "email", "password"]),
+    VerifyKeys(["name", "email", "password"]),
     VerifyEmailFalse,
     HashPassword,
     InsertUser,
@@ -86,8 +87,7 @@ app.post("/register",
                 {
                     reponse: "Enregistrement accepté",
                     id: req.body.id, 
-                    firstname: req.body.firstname,
-                    lastname: req.body.lastname,
+                    name: req.body.name,
                     email: req.body.email,
                 }
             );
@@ -126,9 +126,7 @@ app.post("/login",
         .cookie("jwtToken", req.body.jwt)
         .json({
             id: req.body.dataUser.id,
-            firstname: req.body.dataUser.firstname,
-            lastname: req.body.dataUser.lastname,
-            address: req.body.dataUser.address,
+            name: req.body.dataUser.name,
             email: req.body.dataUser.email,
         });
     } 
@@ -146,6 +144,69 @@ app.post("/login",
         return;
     }
 });
+
+/**
+ * Route pour ajouter un message
+ * Path: /messages
+ * Middleware: Vérification JWT
+ * Action callBack
+ * Méthode: POST
+ */
+app.post("/messages",
+    Verify_JWT_Middleware, // Vérifie que l'utilisateur est connecté avec un token JWT
+    async (req: Request, res: Response): Promise<void> => {
+        const { message } = req.body;
+        const userId = req.body.dataUser?.id; // ID utilisateur récupéré du middleware JWT
+
+        // Vérification des données envoyées
+        if (!message || typeof message !== "string") {
+            res.status(400).json({ success: false, error: "Le message est obligatoire et doit être une chaîne de caractères." });
+            return;
+        }
+
+        try {
+            const pool = usePoolConnection;
+            const [result] = await pool.query<ResultSetHeader>(
+                "INSERT INTO item (message) VALUES (?)",
+                [message]
+            );
+
+            res.status(201).json({ 
+                success: true, 
+                message: "Message ajouté avec succès", 
+                messageId: result.insertId 
+            });
+        } catch (error) {
+            console.error("❌ Erreur lors de l'ajout du message :", error);
+            res.status(500).json({ success: false, error: "Erreur serveur" });
+        }
+    }
+);
+
+/**
+ * Route pour récupérer les messages
+ * Path: /messages
+ * Action callBack
+ * Méthode: POST
+ */
+app.get("/messages",
+    async (req: Request, res: Response): Promise<void> => {
+        try {
+            const pool = usePoolConnection;
+            const limit = parseInt(req.query.limit as string) || 10; // ✅ Limite configurable (par défaut 10)
+
+            const [rows] = await pool.query(
+                "SELECT * FROM item ORDER BY date_save DESC LIMIT ?",
+                [limit]
+            );
+
+            res.status(200).json({ success: true, messages: rows });
+        } catch (error) {
+            console.error("❌ Erreur lors de la récupération des messages :", error);
+            res.status(500).json({ success: false, error: "Erreur serveur" });
+        }
+    }
+);
 
 
 /**

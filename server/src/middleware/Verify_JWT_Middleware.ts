@@ -1,19 +1,20 @@
-import jwt, { VerifyErrors, JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import "dotenv/config";
 
 const SECRET_KEY = process.env.SECRET_KEY_TOKEN;
 
-function Verify_JWT_Middleware(req: Request, res: Response, next: NextFunction) {
+async function Verify_JWT_Middleware(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         if (!SECRET_KEY) {
+            res.status(500).json({ error: "Erreur interne serveur." });
             console.error({
                 identity: "Verify_JWT_Middleware.ts",
                 type: "middleware",
                 chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
                 "❌ Nature de l'erreur": "SECRET_KEY_TOKEN est absent dans .env !",
             });
-            return res.status(500).json({ error: "Erreur interne serveur." });
+            return;
         }
 
         // ✅ Récupération du token depuis les cookies ou l’Authorization header
@@ -23,41 +24,43 @@ function Verify_JWT_Middleware(req: Request, res: Response, next: NextFunction) 
             res.status(401).json({ error: "Accès refusé. Aucun token fourni." });
             console.warn({
                 identity: "Verify_JWT_Middleware.ts",
-                type: "sécurité",
+                type: "middleware",
                 chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
-                "⚠️ Alerte !": "Tentative d'accès sans token JWT.",
+                "⚠️ Alerte": "Tentative d'accès sans token JWT.",
+                "⚠️ Alerte !": "Accès refusé.",
             });
             return;
         }
 
-        // ✅ Vérification et déchiffrement du token
-        jwt.verify(token, SECRET_KEY, (err: VerifyErrors | null, decoded: string | JwtPayload | undefined) => {
-            if (err) {
-                res.status(403).json({ error: "Token invalide ou expiré." });
-                console.warn({
-                    identity: "Verify_JWT_Middleware.ts",
-                    type: "sécurité",
-                    chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
-                    "⚠️ Alerte !": "Tentative d'accès avec un token invalide ou expiré.",
-                    details: err,
-                });
-                return;
-            }
-
-            // ✅ Stocke les infos du token dans req.user
-            req.body.user = decoded;
-
-            next(); // 🔥 Passe au middleware suivant
-        });
-    } catch (error) {
-        console.error({
-            identity: "Verify_JWT_Middleware.ts",
-            type: "middleware",
-            chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
-            "❌ Nature de l'erreur": "Erreur non gérée dans le serveur !",
-            details: error,
-        });
+        // ✅ Vérification et déchiffrement du token avec async/await
+        try {
+            const decoded = await jwt.verify(token, SECRET_KEY) as JwtPayload;
+            req.body.user = decoded; // ✅ Stocke les infos du token dans req.body.user
+            next();
+        }
+        catch (error) {
+            res.status(403).json({ error: "Token invalide ou expiré." });
+            console.warn({
+                identity: "Verify_JWT_Middleware.ts",
+                type: "middleware",
+                chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
+                "⚠️ Alerte": "Tentative d'accès avec un token invalide ou expiré.",
+                "⚠️ Alerte !": "Accès refusé.",
+            });
+            return;
+        }
+    } 
+    catch (error) {
         res.status(500).json({ error: "Erreur interne serveur." });
+        console.error(
+            {
+                identity: "Verify_JWT_Middleware.ts",
+                type: "middleware",
+                chemin: "/server/src/middleware/Verify_JWT_Middleware.ts",
+                "❌ Nature de l'erreur": "Erreur non gérée dans le serveur !",
+                details: error,
+            },
+        );
     }
 }
 
