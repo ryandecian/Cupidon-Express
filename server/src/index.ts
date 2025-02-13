@@ -49,7 +49,7 @@ app.use(LimiteRequestIP)
  * Methode: GET
  */
 app.get("/", (req: Request, res: Response) => {
-    res.status(200).send("API de Anne SAUNIER !!!");
+    res.status(200).send("API Cupidon Express !!!");
 })
 
 /**
