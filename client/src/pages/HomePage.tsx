@@ -26,16 +26,17 @@ export default function HomePage() {
             const response = await fetch(`http://localhost:8080/messages?limit=10&page=${page}`);
             const data = await response.json();
             
-            // Éviter les doublons de messages
-            setMessages((prev) => {
-                const existingIds = new Set(prev.map(msg => msg.id));
-                const newMessages = data.messages.filter(msg => !existingIds.has(msg.id));
-                return [...prev, ...newMessages];
-            });
+            if (!data.messages.length) {
+                console.warn("Aucun nouveau message à charger.");
+                return;
+            }
+    
+            setMessages((prev) => [...prev, ...data.messages]);
         } catch (error) {
             console.error("Erreur lors de la récupération des messages :", error);
         }
     }, [page]);
+    
 
     useEffect(() => {
         fetchMessages();
