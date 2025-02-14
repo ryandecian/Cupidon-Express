@@ -205,12 +205,15 @@ app.get("/messages",
     async (req: Request, res: Response): Promise<void> => {
         try {
             const pool = usePoolConnection;
-            const limit = parseInt(req.query.limit as string) || 10; // ✅ Limite configurable (par défaut 10)
+            const limit = parseInt(req.query.limit as string) || 10;
+            const page = parseInt(req.query.page as string) || 1;
+            const offset = (page - 1) * limit;
+
 
             const [rows] = await pool.query(
-                "SELECT * FROM item ORDER BY date_save DESC LIMIT ?",
-                [limit]
-            );
+                "SELECT * FROM item ORDER BY date_save DESC LIMIT ? OFFSET ?",
+                [limit, offset]
+            );            
 
             res.status(200).json({ success: true, messages: rows });
         } catch (error) {
