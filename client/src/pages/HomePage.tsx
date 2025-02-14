@@ -23,7 +23,7 @@ export default function HomePage() {
 
     const fetchMessages = useCallback(async () => {
         try {
-            const response = await fetch(`http://localhost:8080/messages?limit=10&page=${page}`);
+            const response = await fetch(`https://backend-cupidon-express.decian.ddnsfree.com:7565/messages?limit=10&page=${page}`);
             const data = await response.json();
             
             if (!data.messages.length) {
