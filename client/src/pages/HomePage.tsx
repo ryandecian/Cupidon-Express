@@ -13,6 +13,8 @@ export default function HomePage() {
     const [page, setPage] = useState(1);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [newMessage, setNewMessage] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -32,6 +34,24 @@ export default function HomePage() {
     useEffect(() => {
         fetchMessages();
     }, [fetchMessages]);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault(); // Empêche le rechargement de la page lors de la soumission
+        try {
+            const response = await fetch("http://localhost:8080/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (data.token) {
+                localStorage.setItem("token", data.token);
+                setIsAuthenticated(true);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la connexion :", error);
+        }
+    };
 
     const handleLike = async (id: number) => {
         if (!isAuthenticated) return;
@@ -68,6 +88,23 @@ export default function HomePage() {
     return (
         <div className="home-container">
             <h1 className="title">Mur des Déclarations 💌</h1>
+            {!isAuthenticated && (
+                <form className="login-box" onSubmit={handleLogin}>
+                    <input 
+                        type="email" 
+                        placeholder="Email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <input 
+                        type="password" 
+                        placeholder="Mot de passe" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button type="submit" className="login-button">Se connecter</button>
+                </form>
+            )}
             {isAuthenticated && (
                 <div className="message-box">
                     <textarea 

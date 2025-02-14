@@ -54,7 +54,6 @@ app.use(cors({
     credentials: true
 }));
 
-
 /**
  * Route de base
  * Path: /
@@ -137,6 +136,7 @@ app.post("/login",
         res.status(200)
         .cookie("jwtToken", req.body.jwt)
         .json({
+            token: req.body.jwt,
             id: req.body.dataUser.id,
             name: req.body.dataUser.name,
             email: req.body.dataUser.email,
