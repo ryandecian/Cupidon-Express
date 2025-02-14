@@ -27,7 +27,7 @@ import Create_JWT_Middleware from "./middleware/Create_JWT_Middleware";
 import Verify_JWT_Middleware from "./middleware/Verify_JWT_Middleware";
 
 const app = express();
-const port = 8080;
+const port = 9010;
 
 /**
  * Pour lire le body d'un (request) contenant un json, j'ai besoin d'importer un middleware
@@ -199,22 +199,76 @@ app.post("/messages",
  * Route pour récupérer les messages
  * Path: /messages
  * Action callBack
- * Méthode: POST
+ * Méthode: GET
  */
 app.get("/messages",
     async (req: Request, res: Response): Promise<void> => {
         try {
             const pool = usePoolConnection;
-            const limit = parseInt(req.query.limit as string) || 10; // ✅ Limite configurable (par défaut 10)
+            const limit = parseInt(req.query.limit as string) || 10;
+            const page = parseInt(req.query.page as string) || 1;
+            const offset = (page - 1) * limit;
+
 
             const [rows] = await pool.query(
-                "SELECT * FROM item ORDER BY date_save DESC LIMIT ?",
-                [limit]
-            );
+                "SELECT * FROM item ORDER BY date_save DESC LIMIT ? OFFSET ?",
+                [limit, offset]
+            );            
 
             res.status(200).json({ success: true, messages: rows });
         } catch (error) {
             console.error("❌ Erreur lors de la récupération des messages :", error);
+            res.status(500).json({ success: false, error: "Erreur serveur" });
+        }
+    }
+);
+
+/**
+ * Route pour récupérer les messages
+ * Path: /like
+ * Action callBack
+ * Méthode: POST
+ */
+app.post("/like/:id",
+    Verify_JWT_Middleware, // Vérifie que l'utilisateur est connecté
+    async (req: Request, res: Response): Promise<void> => {
+        const { id } = req.params;
+        const userId = req.body.user?.id; // ID utilisateur récupéré depuis le JWT
+
+        if (!id || isNaN(Number(id))) {
+            res.status(400).json({ success: false, error: "ID du message invalide." });
+            return;
+        }
+
+        try {
+            const pool = usePoolConnection;
+
+            // Vérifie si l'utilisateur a déjà liké ce message
+            const [existingLike]: any = await pool.query(
+                "SELECT * FROM `like` WHERE user_id = ? AND item_id = ?",
+                [userId, id]
+            );
+
+            if (existingLike.length > 0) {
+                res.status(400).json({ success: false, error: "Vous avez déjà liké ce message." });
+                return;
+            }
+
+            // Ajoute un like
+            await pool.query(
+                "INSERT INTO `like` (user_id, item_id) VALUES (?, ?)",
+                [userId, id]
+            );
+
+            // Met à jour le compteur de likes dans la table `item`
+            await pool.query(
+                "UPDATE item SET likes = likes + 1 WHERE id = ?",
+                [id]
+            );
+
+            res.status(200).json({ success: true, message: "Like ajouté !" });
+        } catch (error) {
+            console.error("❌ Erreur lors de l'ajout du like :", error);
             res.status(500).json({ success: false, error: "Erreur serveur" });
         }
     }
