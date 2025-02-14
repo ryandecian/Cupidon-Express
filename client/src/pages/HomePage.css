@@ -17,6 +17,42 @@
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* 🔐 Zone de connexion */
+.login-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #c2185b;
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+}
+
+.login-button, .logout-button {
+    padding: 10px;
+    font-size: 1rem;
+    background-color: #c2185b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.login-button:hover, .logout-button:hover {
+    background-color: #a3154f;
+}
+
 /* 📝 Zone d'ajout de message */
 .message-box {
     width: 100%;

@@ -36,7 +36,7 @@ export default function HomePage() {
     }, [fetchMessages]);
 
     const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault(); // Empêche le rechargement de la page lors de la soumission
+        e.preventDefault();
         try {
             const response = await fetch("http://localhost:8080/login", {
                 method: "POST",
@@ -51,6 +51,11 @@ export default function HomePage() {
         } catch (error) {
             console.error("Erreur lors de la connexion :", error);
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        setIsAuthenticated(false);
     };
 
     const handleLike = async (id: number) => {
@@ -88,7 +93,7 @@ export default function HomePage() {
     return (
         <div className="home-container">
             <h1 className="title">Mur des Déclarations 💌</h1>
-            {!isAuthenticated && (
+            {!isAuthenticated ? (
                 <form className="login-box" onSubmit={handleLogin}>
                     <input 
                         type="email" 
@@ -104,6 +109,8 @@ export default function HomePage() {
                     />
                     <button type="submit" className="login-button">Se connecter</button>
                 </form>
+            ) : (
+                <button onClick={handleLogout} className="logout-button">Se déconnecter</button>
             )}
             {isAuthenticated && (
                 <div className="message-box">
