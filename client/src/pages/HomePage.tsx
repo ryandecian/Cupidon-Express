@@ -1,7 +1,108 @@
+import { useState, useEffect, useCallback } from "react";
+import "./HomePage.css";
 
-
-function HomePage() {
-    return (<></>);
+interface Message {
+    id: number;
+    message: string;
+    date_save: string;
+    likes: number;
 }
 
-export default HomePage;
+export default function HomePage() {
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [page, setPage] = useState(1);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [newMessage, setNewMessage] = useState("");
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        setIsAuthenticated(!!token);
+    }, []);
+
+    const fetchMessages = useCallback(async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/messages?limit=10&page=${page}`);
+            const data = await response.json();
+            setMessages((prev) => [...prev, ...data.messages]);
+        } catch (error) {
+            console.error("Erreur lors de la récupération des messages :", error);
+        }
+    }, [page]);
+
+    useEffect(() => {
+        fetchMessages();
+    }, [fetchMessages]);
+
+    const handleLike = async (id: number) => {
+        if (!isAuthenticated) return;
+        try {
+            await fetch(`http://localhost:8080/like/${id}`, {
+                method: "POST",
+                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+            });
+            setMessages(messages.map(msg => msg.id === id ? { ...msg, likes: msg.likes + 1 } : msg));
+        } catch (error) {
+            console.error("Erreur lors du like :", error);
+        }
+    };
+
+    const handlePostMessage = async () => {
+        if (!isAuthenticated || !newMessage.trim()) return;
+        try {
+            const response = await fetch("http://localhost:8080/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({ message: newMessage })
+            });
+            const data = await response.json();
+            setMessages([{ id: data.messageId, message: newMessage, date_save: new Date().toISOString(), likes: 0 }, ...messages]);
+            setNewMessage("");
+        } catch (error) {
+            console.error("Erreur lors de l'envoi du message :", error);
+        }
+    };
+
+    return (
+        <div className="home-container">
+            <h1 className="title">Mur des Déclarations 💌</h1>
+            {isAuthenticated && (
+                <div className="message-box">
+                    <textarea 
+                        className="message-input" 
+                        placeholder="Écrivez votre message..." 
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                    />
+                    <button 
+                        onClick={handlePostMessage} 
+                        className="send-button">
+                        Envoyer
+                    </button>
+                </div>
+            )}
+            <div className="messages-list">
+                {messages.map((msg) => (
+                    <div key={msg.id} className="message-card">
+                        <p className="message-text">{msg.message}</p>
+                        <div className="message-footer">
+                            <span className="message-date">{new Date(msg.date_save).toLocaleString()}</span>
+                            <button 
+                                onClick={() => handleLike(msg.id)}
+                                className={`like-button ${!isAuthenticated ? 'disabled' : ''}`}>
+                                ❤️ {msg.likes}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <button 
+                onClick={() => setPage(page + 1)} 
+                className="load-more">
+                Voir plus
+            </button>
+        </div>
+    );
+}
