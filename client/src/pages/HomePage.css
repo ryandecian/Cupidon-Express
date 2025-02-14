@@ -46,7 +46,7 @@
 }
 
 .auth-box input {
-    width: 100%;
+    width: calc(100% - 24px);
     padding: 10px;
     border: 2px solid #c2185b;
     border-radius: 10px;
