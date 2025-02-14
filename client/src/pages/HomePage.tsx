@@ -81,7 +81,7 @@ export default function HomePage() {
     const handlePostMessage = async () => {
         if (!isAuthenticated || !newMessage.trim()) return;
         try {
-            const response = await fetch("http://localhost:8080/messages", {
+            const response = await fetch("https://backend-cupidon-express.decian.ddnsfree.com:7565/messages", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

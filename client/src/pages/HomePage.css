@@ -29,8 +29,8 @@
     margin-bottom: 20px;
 }
 
-.login-box input {
-    width: 100%;
+.login-box > input {
+    width: 90%;
     padding: 10px;
     border: 2px solid #c2185b;
     border-radius: 10px;
