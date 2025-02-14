@@ -27,7 +27,7 @@ import Create_JWT_Middleware from "./middleware/Create_JWT_Middleware";
 import Verify_JWT_Middleware from "./middleware/Verify_JWT_Middleware";
 
 const app = express();
-const port = 8080;
+const port = 9010;
 
 /**
  * Pour lire le body d'un (request) contenant un json, j'ai besoin d'importer un middleware
