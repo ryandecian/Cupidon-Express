@@ -60,16 +60,26 @@ export default function HomePage() {
 
     const handleLike = async (id: number) => {
         if (!isAuthenticated) return;
+    
         try {
-            await fetch(`http://localhost:8080/like/${id}`, {
+            const response = await fetch(`http://localhost:8080/like/${id}`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
             });
+    
+            const data = await response.json();
+    
+            if (!data.success) {
+                console.warn("Impossible d'ajouter le like :", data.error);
+                return;
+            }
+    
             setMessages(messages.map(msg => msg.id === id ? { ...msg, likes: msg.likes + 1 } : msg));
         } catch (error) {
             console.error("Erreur lors du like :", error);
         }
     };
+    
 
     const handlePostMessage = async () => {
         if (!isAuthenticated || !newMessage.trim()) return;
