@@ -1,5 +1,6 @@
 // Import général
 import express, { query, Request, Response, NextFunction } from "express";
+import cors from "cors";
 
 // Import des composants de sécurités
 import LimiteRequestIP from "./Security/LimiteRequestIP";
@@ -41,7 +42,17 @@ app.use(express.json());
  * Permet de limité les requêtes d'une même IP à 150 par min
  * Déblocage automatique
  */
-app.use(LimiteRequestIP)
+app.use(LimiteRequestIP);
+
+/**
+ * Sécurité DDOS
+ * Permet de limité les requêtes d'une même IP à 150 par min
+ * Déblocage automatique
+ */
+app.use(cors({
+    origin: "http://localhost:3000", // 🔹 Ajuste selon l'URL de ton front
+    credentials: true
+}));
 
 /**
  * Route de base
@@ -125,6 +136,7 @@ app.post("/login",
         res.status(200)
         .cookie("jwtToken", req.body.jwt)
         .json({
+            token: req.body.jwt,
             id: req.body.dataUser.id,
             name: req.body.dataUser.name,
             email: req.body.dataUser.email,
