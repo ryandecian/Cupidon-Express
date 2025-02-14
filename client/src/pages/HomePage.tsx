@@ -45,7 +45,7 @@ export default function HomePage() {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/login", {
+            const response = await fetch("https://backend-cupidon-express.decian.ddnsfree.com:7565/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password })
@@ -68,7 +68,7 @@ export default function HomePage() {
     const handleLike = async (id: number) => {
         if (!isAuthenticated) return;
         try {
-            await fetch(`http://localhost:8080/like/${id}`, {
+            await fetch(`https://backend-cupidon-express.decian.ddnsfree.com:7565/like/${id}`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
             });
